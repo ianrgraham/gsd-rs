@@ -1,9 +1,10 @@
 [package]
 name = "gsd"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "High-level bindings to GSD's C API"
+license = "MIT"
+keywords = ["gsd", "hoomd", "md", "io", "ffi"]
 
 [lib]
 name = "gsd"

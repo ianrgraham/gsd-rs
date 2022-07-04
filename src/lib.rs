@@ -49,6 +49,7 @@ enum OpenFlag {
     Append = 3
 }
 
+// TODO - Use Error variants for better debugging
 enum GSDResult {
     Success = 0,
     IO = -1,
