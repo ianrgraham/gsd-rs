@@ -1,3 +1,4 @@
+use crate::{fl, hoomd};
 use gsd_sys::*;
 use std::ffi::CString;
 use std::fs::remove_file;  
@@ -24,6 +25,7 @@ fn safely_remove_file_if_exists(file: &String) {
     }
 }
 
+#[test]
 fn create_and_remove_file() {
 
     let rusty_fname = get_test_file_name();
@@ -48,8 +50,26 @@ fn create_and_remove_file() {
     safely_remove_file_if_exists(&rusty_fname)
 }
 
+#[test]
+fn fl_mod_api() {
+    let mut gsd_file = fl::open(
+        "file.gsd".to_owned(), "wb",
+        "My application".to_owned(),
+        "My Schema".to_owned(), (1,0)).unwrap();
 
-fn main() {
-    println!("Hello, world!");
-    create_and_remove_file();
+    let data = vec![1.0f32, 2.0, 3.0, 4.0];
+    gsd_file.write_chunk("chunk1",
+        &data).unwrap();
+    gsd_file.end_frame().unwrap();
+
+    gsd_file.write_chunk("chunk1",
+        &vec![9.0f32, 10.0, 11.0, 12.0]).unwrap();
+    gsd_file.end_frame().unwrap();
+
+    gsd_file.write_chunk("chunk1",
+        &vec![13.0f32, 14.0]).unwrap();
+    gsd_file.end_frame().unwrap();
+
+    assert!(gsd_file.nframes() == 3);
+    drop(gsd_file);
 }
