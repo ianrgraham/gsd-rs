@@ -63,26 +63,26 @@ impl GSDFile {
 
         let data: ArrayView<T, Dim<[usize; I]>> = data.into();
         let dim = data.raw_dim();
-        let mut N = 0;
-        let mut M = 0;
+        let n;
+        let m;
         println!("raw_dim: {:?}", dim);
         if dim.ndim() > 2 {
             return Err(format!("GSD can only write 1 or 2 dimensional arrays: {}", name));
         }
-        else if dim.ndim() == 2 { N = dim[0]; M = dim[1]; }
-        else { N = dim[0]; M = 1; }
+        else if dim.ndim() == 2 { n = dim[0]; m = dim[1]; }
+        else { n = dim[0]; m = 1; }
 
         let data = data.as_standard_layout();
 
         let gsd_type = GSDType::from_type::<T>();
-        let c_name = std::ffi::CString::new(name).expect("CString::new failed");
+        let c_name = CString::new(name).expect("CString::new failed");
 
         let retval = unsafe { libgsd::gsd_write_chunk(
             &mut self.handle as *mut libgsd::gsd_handle,
             c_name.as_ptr(),
             gsd_type as u32,
-            N as u64,
-            M as u32,
+            n as u64,
+            m as u32,
             0,
             data.as_ptr() as *const c_void
         )};
@@ -145,13 +145,13 @@ pub fn open(name: String, mode: &str, application: String, schema: String, schem
         _ => {return Err("mode must be 'wb', 'wb+', 'rb', 'rb+', 'xb', 'xb+', or 'ab'".to_owned())}
     };
 
-    let mut handle = MaybeUninit::<libgsd::gsd_handle>::uninit();
-    let mut raw_handle = unsafe { *handle.as_ptr() };
+    let mut _handle = MaybeUninit::<libgsd::gsd_handle>::uninit();
+    let mut raw_handle = unsafe { *_handle.as_ptr() };
 
     let retval = if overwrite {
-        let c_name = std::ffi::CString::new(name.clone()).expect("CString::new failed");
-        let c_application = std::ffi::CString::new(application.clone()).expect("CString::new failed");
-        let c_schema = std::ffi::CString::new(schema.clone()).expect("CString::new failed");
+        let c_name = CString::new(name.clone()).expect("CString::new failed");
+        let c_application = CString::new(application.clone()).expect("CString::new failed");
+        let c_schema = CString::new(schema.clone()).expect("CString::new failed");
 
         let c_schema_version = unsafe { libgsd::gsd_make_version(schema_version.0, schema_version.1) };
 
@@ -168,12 +168,12 @@ pub fn open(name: String, mode: &str, application: String, schema: String, schem
         }
     }
     else {
-        let c_name = std::ffi::CString::new(name.clone()).expect("CString::new failed");
+        let c_name = CString::new(name.clone()).expect("CString::new failed");
 
         unsafe { libgsd::gsd_open(&mut raw_handle as *mut libgsd::gsd_handle, c_name.as_ptr(), c_flags as u32) }
     };
     
-    check_gsd_errors(retval, &name);
+    check_gsd_errors(retval, &name).unwrap();
 
     let mode = mode.to_owned();
     Ok( GSDFile { name, mode, application, schema, schema_version, handle: raw_handle, is_open: true} )

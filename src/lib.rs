@@ -1,13 +1,6 @@
-use gsd_sys::*;
-use std::ffi::CString;
-use std::fs::remove_file;  
-use std::io::ErrorKind;
-use std::env::temp_dir;
+pub mod fl;
+pub mod hoomd;
 
-mod fl;
-mod hoomd;
-
-#[cfg(test)]
 mod tests;
 
 enum GSDType {
@@ -50,6 +43,7 @@ enum OpenFlag {
 }
 
 // TODO - Use Error variants for better debugging
+#[allow(dead_code)]
 enum GSDResult {
     Success = 0,
     IO = -1,

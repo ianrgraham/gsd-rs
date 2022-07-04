@@ -1,3 +1,5 @@
+#[cfg(test)]
+
 use crate::{fl, hoomd};
 use gsd_sys::*;
 use std::ffi::CString;
