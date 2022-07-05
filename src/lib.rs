@@ -3,6 +3,8 @@ pub mod hoomd;
 
 mod tests;
 
+#[repr(u8)]
+#[derive(Debug, PartialEq)]
 enum GSDType {
     UINT8 = 1,
     UINT16,
@@ -19,7 +21,6 @@ enum GSDType {
 impl GSDType {
     fn from_type<T>() -> Self {
         let type_name = std::any::type_name::<T>();
-        println!("type_name: {}", type_name);
         match type_name {
             "u8" => GSDType::UINT8,
             "u16" => GSDType::UINT16,
@@ -34,8 +35,18 @@ impl GSDType {
             _ => panic!("Unsupported type")
         }
     }
+
+    fn check_match<T>(&self) -> Result<(), String> {
+        let check_type = Self::from_type::<T>();
+        if *self != check_type {
+            Err(format!("Type mismatch: {:?} != {:?}", self, check_type))
+        } else {
+            Ok(())
+        }
+    }
 }
 
+#[repr(u8)]
 enum OpenFlag {
     Readwrite = 1,
     Readonly = 2,
@@ -44,6 +55,7 @@ enum OpenFlag {
 
 // TODO - Use Error variants for better debugging
 #[allow(dead_code)]
+#[repr(i32)]
 enum GSDResult {
     Success = 0,
     IO = -1,

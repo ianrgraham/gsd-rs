@@ -1,4 +1,4 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use crate::{fl, hoomd};
 use gsd_sys::*;
@@ -54,10 +54,10 @@ fn create_and_remove_file() {
 
 #[test]
 fn fl_mod_api() {
-    let mut gsd_file = fl::open(
-        "file.gsd".to_owned(), "wb",
-        "My application".to_owned(),
-        "My Schema".to_owned(), (1,0)).unwrap();
+    let mut gsd_file = fl::open!(
+        "file.gsd", "wb+",
+        "My application",
+        "My Schema", (1,0)).unwrap();
 
     let data = vec![1.0f32, 2.0, 3.0, 4.0];
     gsd_file.write_chunk("chunk1",
@@ -72,6 +72,8 @@ fn fl_mod_api() {
         &vec![13.0f32, 14.0]).unwrap();
     gsd_file.end_frame().unwrap();
 
+    let output = gsd_file.read_chunk::<f32>(2, "chunk1").unwrap();
+    assert!(output == ndarray::Array2::from(vec![[13.0f32],[14.0]]));
     assert!(gsd_file.nframes() == 3);
-    drop(gsd_file);
+
 }
