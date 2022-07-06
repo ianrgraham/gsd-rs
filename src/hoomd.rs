@@ -5,7 +5,7 @@ use crate::fl::GSDFile;
 pub struct ConfigurationData {
     step: u64,
     dimensions: u8,
-    box_: Box<[f32; 6]>,
+    box_: [f32; 6],
 }
 
 #[derive(Default)]
