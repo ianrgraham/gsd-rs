@@ -15,7 +15,7 @@ enum GSDType {
     INT32,
     INT64,
     FLOAT,
-    DOUBLE
+    DOUBLE,
 }
 
 impl GSDType {
@@ -32,7 +32,7 @@ impl GSDType {
             "i64" => GSDType::INT64,
             "f32" => GSDType::FLOAT,
             "f64" => GSDType::DOUBLE,
-            _ => panic!("Unsupported type")
+            _ => panic!("Unsupported type"),
         }
     }
 
@@ -50,10 +50,10 @@ impl GSDType {
 enum OpenFlag {
     Readwrite = 1,
     Readonly = 2,
-    Append = 3
+    Append = 3,
 }
 
-// TODO - Use Error variants for better debugging
+// TODO - Use Error variants for better error handling
 #[allow(dead_code)]
 #[repr(i32)]
 enum GSDResult {
@@ -67,4 +67,23 @@ enum GSDResult {
     NamelistFull = -7,
     NotWritable = -8,
     NotReadable = -9,
+}
+
+// we can't have two macros with the name "open", so we'll use C-style namespacing to call this macro
+#[macro_export]
+macro_rules! hoomd_open {
+    ($name:expr) => {{
+        hoomd_open!($name, "rw")
+    }};
+    ($name:expr, $mode:expr) => {{
+        let gsd_file = $crate::fl::GSDFile::try_new(
+            $name.to_owned(),
+            $mode.to_owned(),
+            Some(format!("gsd.hoomd {}", env!("CARGO_PKG_VERSION"))),
+            Some("hoomd".to_owned()),
+            Some((1, 4)),
+        )
+        .unwrap();
+        $crate::hoomd::HOOMDTrajectory::new(gsd_file)
+    }};
 }

@@ -1,7 +1,7 @@
 use std::{
-    ffi::{c_void, CString, CStr},
-    ptr,
+    ffi::{c_void, CStr, CString},
     mem::MaybeUninit,
+    ptr,
 };
 
 use crate::*;
@@ -52,7 +52,6 @@ pub struct GSDFile {
 }
 
 impl GSDFile {
-
     pub fn try_new(
         name: String,
         mode: String,
@@ -142,7 +141,7 @@ impl GSDFile {
         Ok(GSDFile {
             name,
             mode,
-            handle: raw_handle
+            handle: raw_handle,
         })
     }
 
@@ -153,7 +152,6 @@ impl GSDFile {
     }
 
     pub fn truncate(&mut self) {
-
         let retval = unsafe { libgsd::gsd_truncate(&mut self.handle as *mut libgsd::gsd_handle) };
 
         check_gsd_errors(retval, &self.name).unwrap();
@@ -169,7 +167,6 @@ impl GSDFile {
         T: 'a + Clone + num_traits::Num,
         Dim<[usize; I]>: Dimension,
     {
-
         let data: ArrayView<T, Dim<[usize; I]>> = data.into();
         let dim = data.raw_dim();
         let n;
@@ -208,7 +205,6 @@ impl GSDFile {
     }
 
     pub fn end_frame(&mut self) -> Result<(), String> {
-
         debug!("end frame: {}", self.name);
 
         let retval = unsafe { libgsd::gsd_end_frame(&mut self.handle as *mut libgsd::gsd_handle) };
@@ -232,7 +228,6 @@ impl GSDFile {
         frame: usize,
         name: &str,
     ) -> Result<Array2<T>, String> {
-
         let c_name = CString::new(name).expect("CString::new failed");
         if let Some(index_entry) = unsafe {
             libgsd::gsd_find_chunk(
@@ -265,8 +260,33 @@ impl GSDFile {
         }
     }
 
-    pub fn find_matching_chunk_names(&mut self, pattern: &str) -> Vec<&str> {
+    pub fn read_chunk_dyn<T: Clone + num_traits::Num>(
+        &mut self,
+        frame: usize,
+        name: &str,
+    ) -> Result<ArrayD<T>, String> {
+        let data = self.read_chunk(frame, name)?;
+        Ok(data.into_dyn())
+    }
 
+    pub fn read_chunk_with_dim<T: Clone + num_traits::Num, const I: usize>(
+        &mut self,
+        frame: usize,
+        name: &str,
+    ) -> Result<Array<T, Dim<[usize; I]>>, String>
+    where
+        Dim<[usize; I]>: Dimension,
+    {
+        let data = self.read_chunk::<T>(frame, name)?;
+        let cols = data.ncols();
+        assert!(I == cols);
+        match data.into_dimensionality::<Dim<[usize; I]>>() {
+            Ok(data) => Ok(data),
+            Err(e) => Err(format!("{}", e)),
+        }
+    }
+
+    pub fn find_matching_chunk_names(&mut self, pattern: &str) -> Vec<&str> {
         let mut result = Vec::<&str>::new();
         let c_pattern = CString::new(pattern).expect("CString::new failed");
         let null_ptr: *const i8 = ptr::null();
@@ -275,7 +295,7 @@ impl GSDFile {
             CStr::from_ptr(libgsd::gsd_find_matching_chunk_name(
                 &mut self.handle as *mut libgsd::gsd_handle,
                 c_pattern.as_ptr(),
-                null_ptr
+                null_ptr,
             ))
         };
 
@@ -285,7 +305,7 @@ impl GSDFile {
                 CStr::from_ptr(libgsd::gsd_find_matching_chunk_name(
                     &mut self.handle as *mut libgsd::gsd_handle,
                     c_pattern.as_ptr(),
-                    c_found.as_ptr()
+                    c_found.as_ptr(),
                 ))
             };
         }
@@ -294,7 +314,6 @@ impl GSDFile {
     }
 
     pub fn upgrade(&mut self) -> Result<(), String> {
-
         let retval = unsafe { libgsd::gsd_upgrade(&mut self.handle as *mut libgsd::gsd_handle) };
 
         check_gsd_errors(retval, &self.name)?;
@@ -355,4 +374,4 @@ macro_rules! open {
     };
 }
 
-pub(crate) use open;
+pub use open;
