@@ -73,7 +73,7 @@ enum GSDResult {
 #[macro_export]
 macro_rules! hoomd_open {
     ($name:expr) => {{
-        hoomd_open!($name, "rw")
+        hoomd_open!($name, "wb")
     }};
     ($name:expr, $mode:expr) => {{
         let gsd_file = $crate::fl::GSDFile::try_new(

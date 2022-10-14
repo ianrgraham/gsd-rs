@@ -74,9 +74,12 @@ fn fl_module_api() {
 
     let output = gsd_file.read_chunk::<f32>(2, "chunk1").unwrap();
     assert!(output == ndarray::Array2::from(vec![[13.0f32], [14.0]]));
+
+    let output = gsd_file.read_chunk_flat::<f32>(2, "chunk1").unwrap();
+    assert!(output == ndarray::Array1::from(vec![13.0f32, 14.0]));
     assert!(gsd_file.nframes() == 3);
 
-    safely_remove_file_if_exists("file.gsd");
+    safely_remove_file_if_exists(&rusty_fname);
 }
 
 #[test]
